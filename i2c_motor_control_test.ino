@@ -6,8 +6,6 @@
    Purple - PWM -  Gray
    Green  - GND -  White
    Blue   - 5V  -  Black
-
-
 */
 
 #define SENSORPWM1 PB6
@@ -21,9 +19,11 @@
 #define SUPPLYVOLTAGE 8.4
 #define VOLTAGELIMITDRIVER 6
 #define VOLTAGELIMITMOTOR 3
-#define MOTORRESISTANCE 5.6
+#define MOTORRESISTANCE 5.57
 
-//#define POLEPAIRS 14
+#define SENSORMINPULSE 7
+#define SENSORMAXPULSE 935
+
 #define POLEPAIRS 11
 #define CLOSEDLOOP true
 
@@ -32,13 +32,13 @@
 #define MAXTARGETCURRENT 10
 #define MAXTARGETVOLTAGE 6
 
-BLDCMotor motor1 = BLDCMotor(POLEPAIRS);
+BLDCMotor motor1 = BLDCMotor(POLEPAIRS, MOTORRESISTANCE);
 BLDCDriver3PWM driver1 = BLDCDriver3PWM(PC0, PC1, PC2, PC13);
-MagneticSensorPWM sensor1 = MagneticSensorPWM(SENSORPWM1, 7, 935);
+MagneticSensorPWM sensor1 = MagneticSensorPWM(SENSORPWM1, SENSORMINPULSE, SENSORMAXPULSE);
 
-BLDCMotor motor2 = BLDCMotor(POLEPAIRS);
+BLDCMotor motor2 = BLDCMotor(POLEPAIRS, MOTORRESISTANCE);
 BLDCDriver3PWM driver2 = BLDCDriver3PWM(PA0, PA1, PA2, PC14);
-MagneticSensorPWM sensor2 = MagneticSensorPWM(SENSORPWM2, 7, 935);
+MagneticSensorPWM sensor2 = MagneticSensorPWM(SENSORPWM2, SENSORMINPULSE, SENSORMAXPULSE);
 
 char message[MESSAGESIZE];
 float motorTargetCurrent = 0;
@@ -105,7 +105,6 @@ void initMotors() {
   motor1.linkDriver(&driver1);
 
   motor1.voltage_limit = VOLTAGELIMITMOTOR;
-  //motor1.phase_resistance = MOTORRESISTANCE;
   motor1.voltage_sensor_align = VOLTAGELIMITMOTOR;
 
   if (CLOSEDLOOP) {
@@ -129,7 +128,6 @@ void initMotors() {
   motor2.linkDriver(&driver2);
 
   motor2.voltage_limit = VOLTAGELIMITMOTOR;
-  //motor2.phase_resistance = MOTORRESISTANCE;
   motor2.voltage_sensor_align = VOLTAGELIMITMOTOR;
 
   if (CLOSEDLOOP) {
@@ -151,29 +149,19 @@ void receiveFun (int bytes)
     message[i] = Wire.read();
     i++;
   }
-  /*
-    if(message[0] != 0xFF) {
-    blink(3,100);
-    return;
-    }
-  */
-  float in = message[1];
-  in = in - 128;
+  
+  float spd = message[1];
+  float str = message[2];
 
-
+  //de-normalize values
+  spd = spd - 128;
   if (CLOSEDLOOP) {
-    in = in / 128 * MAXTARGETVOLTAGE;
-    motorTargetVoltage = in;
+    spd = spd / 128 * MAXTARGETVOLTAGE;
+    motorTargetVoltage = spd;
   } else {
-    in = in / 128 * MAXTARGETVELOCITY;
-    motorTargetVelocity = in;
+    spd = spd / 128 * MAXTARGETVELOCITY;
+    motorTargetVelocity = spd;
   }
-  /*
-    char rec = Wire.read();
-    message[i] = rec;
-    motorTargetVelocity = rec;
-    i++;
-  */
 }
 
 void requestFun()
