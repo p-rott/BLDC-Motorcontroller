@@ -25,6 +25,8 @@
 #define SENSORMAXPULSE 935
 
 #define POLEPAIRS 11
+// TODO get proper radius
+#define WHEELRADIUS 2
 #define CLOSEDLOOP true
 
 #define MESSAGESIZE 8
@@ -166,5 +168,8 @@ void receiveFun (int bytes)
 
 void requestFun()
 {
-  Wire.write(message);
+  // Convert from angular to linear velocity
+  float vel = sensor1.getVelocity() + sensor2.getVelocity() / 2 * WHEELRADIUS;
+  // TODO check I2C float specs, convert if neccessary
+  Wire.write(vel);
 }
