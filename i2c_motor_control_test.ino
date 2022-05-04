@@ -25,8 +25,6 @@
 #define SENSORMAXPULSE 935
 
 #define POLEPAIRS 11
-// TODO get proper radius
-#define WHEELRADIUS 2
 #define CLOSEDLOOP true
 
 #define MESSAGESIZE 8
@@ -59,18 +57,13 @@ void setup()
 
 void loop()
 {
-  if (CLOSEDLOOP) {
-    // main FOC algorithm function
-    motor1.loopFOC();
-    motor2.loopFOC();
+  // main FOC algorithm function
+  motor1.loopFOC();
+  motor2.loopFOC();
 
-    // Motion control function
-    motor1.move(motorTargetVoltage);
-    motor2.move(motorTargetVoltage);
-  } else {
-    motor1.move(motorTargetVelocity);
-    motor2.move(motorTargetVelocity);
-  }
+  // Motion control function
+  motor1.move(motorTargetVoltage);
+  motor2.move(motorTargetVoltage);
 }
 
 void blink(int amount, int del) {
@@ -96,51 +89,31 @@ void initMotors() {
   pinMode(SENSORPWM1, INPUT);
   pinMode(SENSORPWM2, INPUT);
 
-  if (CLOSEDLOOP) {
-    sensor1.init();
-    motor1.linkSensor(&sensor1);
-  }
-
+  sensor1.init();
+  motor1.linkSensor(&sensor1);
   driver1.voltage_power_supply = SUPPLYVOLTAGE;
   driver1.voltage_limit = VOLTAGELIMITDRIVER;
   driver1.init();
   motor1.linkDriver(&driver1);
-
   motor1.voltage_limit = VOLTAGELIMITMOTOR;
   motor1.voltage_sensor_align = VOLTAGELIMITMOTOR;
+  motor1.torque_controller = TorqueControlType::voltage;
+  motor1.controller = MotionControlType::torque;
+  motor1.init();
+  motor1.initFOC();
 
-  if (CLOSEDLOOP) {
-    motor1.torque_controller = TorqueControlType::voltage;
-    motor1.controller = MotionControlType::torque;
-    motor1.init();
-    motor1.initFOC();
-  } else {
-    motor1.controller = MotionControlType::velocity_openloop;
-    motor1.init();
-  }
-
-  if (CLOSEDLOOP) {
-    sensor2.init();
-    motor2.linkSensor(&sensor2);
-  }
-
+  sensor2.init();
+  motor2.linkSensor(&sensor2);
   driver2.voltage_power_supply = SUPPLYVOLTAGE;
   driver2.voltage_limit = VOLTAGELIMITDRIVER;
   driver2.init();
   motor2.linkDriver(&driver2);
-
   motor2.voltage_limit = VOLTAGELIMITMOTOR;
   motor2.voltage_sensor_align = VOLTAGELIMITMOTOR;
-
-  if (CLOSEDLOOP) {
-    motor2.torque_controller = TorqueControlType::voltage;
-    motor2.controller = MotionControlType::torque;
-    motor2.init();
-    motor2.initFOC();
-  } else {
-    motor2.controller = MotionControlType::velocity_openloop;
-    motor2.init();
-  }
+  motor2.torque_controller = TorqueControlType::voltage;
+  motor2.controller = MotionControlType::torque;
+  motor2.init();
+  motor2.initFOC();
 }
 
 void receiveFun (int bytes)
@@ -151,19 +124,14 @@ void receiveFun (int bytes)
     message[i] = Wire.read();
     i++;
   }
-  
+
   float spd = message[1];
   float str = message[2];
 
   //de-normalize values
   spd = spd - 128;
-  if (CLOSEDLOOP) {
-    spd = spd / 128 * MAXTARGETVOLTAGE;
-    motorTargetVoltage = spd;
-  } else {
-    spd = spd / 128 * MAXTARGETVELOCITY;
-    motorTargetVelocity = spd;
-  }
+  spd = spd / 128 * MAXTARGETVOLTAGE;
+  motorTargetVoltage = spd;
 }
 
 void requestFun()
