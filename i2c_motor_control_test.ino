@@ -168,7 +168,8 @@ void receiveFun (int bytes)
 
 void requestFun()
 {
-  // Convert from angular to linear velocity
+  // Convert from angular rad/s to linear velocity m/s
+  // TODO calculate correct conversion factor
   float vel = sensor1.getVelocity() + sensor2.getVelocity() / 2 * WHEELRADIUS;
   // TODO check I2C float specs, convert if neccessary
   Wire.write(vel);
