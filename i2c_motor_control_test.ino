@@ -4,8 +4,8 @@
 /*
    Rotary Encoder Wires:
    Purple - PWM -  Gray
-   Green  - GND -  White
-   Blue   - 5V  -  Black
+   Green  - GND -  Black
+   Blue   - 5V  -  White
 */
 
 #define SENSORPWM1 PB6
